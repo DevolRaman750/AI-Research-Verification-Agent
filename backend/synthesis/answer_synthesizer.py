@@ -84,14 +84,14 @@ class AnswerSynthesizer:
         confidence_level = confidence["confidence_level"]
         confidence_reason = confidence["confidence_reason"]
 
-        # 1️⃣ Build controlled prompt
+        #  Build controlled prompt
         prompt = build_prompt(
             question,
             verified_claims,
             confidence_level
         )
 
-        # 2️⃣ Generate answer text (LLM used ONLY for phrasing)
+        #  Generate answer text (LLM used ONLY for phrasing)
         answer_text = llm_complete(prompt)
         self.answer_repo.create(
         db=db,
@@ -101,7 +101,7 @@ class AnswerSynthesizer:
         confidence_reason=confidence_reason
         )
 
-        # 3️⃣ Attach evidence verbatim
+        #  Attach evidence verbatim
         evidence = []
         for c in verified_claims:
             self.evidence_repo.create(
@@ -117,7 +117,7 @@ class AnswerSynthesizer:
                 "sources": c.sources
             })
 
-        # 4️⃣ Optional notes
+        #  Optional notes
         notes = generate_notes(confidence_level)
 
         return {

@@ -35,25 +35,33 @@ class WebEnvironment(Environment):
             limit = self.MAX_PAGES
             if num_docs is not None:
                 limit = max(1, min(int(num_docs), self.MAX_PAGES))
+            print(f"[WebEnvironment] Searching for: {query} (limit={limit})")
             results = self.search_client.search(query, limit=limit)
+            print(f"[WebEnvironment] Search returned {len(results)} results")
         except Exception as e:
+            print(f"[WebEnvironment] Search error: {e}")
             self.state.errors.append(str(e))
             return []
 
         for result in results:
             url = result["url"]
+            print(f"[WebEnvironment] Processing: {url}")
 
             if self.is_blocked_domain(url):
+                print(f"[WebEnvironment] Blocked domain: {url}")
                 continue
 
             if url in self.state.visited_urls:
+                print(f"[WebEnvironment] Already visited: {url}")
                 continue
 
             try:
                 html = self.fetcher.fetch(url)
                 text, metadata = self.extractor.extract(html)
+                print(f"[WebEnvironment] Extracted {len(text)} chars from {url}")
 
                 if len(text) < MIN_TEXT_LENGTH:
+                    print(f"[WebEnvironment] Text too short ({len(text)} < {MIN_TEXT_LENGTH}): {url}")
                     continue
 
                 doc = WebDocument(
@@ -65,8 +73,11 @@ class WebEnvironment(Environment):
 
                 self.state.visited_urls.append(url)
                 self.state.documents.append(doc)
+                print(f"[WebEnvironment] Added document: {url}")
 
             except Exception as e:
+                print(f"[WebEnvironment] Fetch/extract error for {url}: {e}")
                 self.state.errors.append(f"{url}: {str(e)}")
 
+        print(f"[WebEnvironment] Total documents collected: {len(self.state.documents)}")
         return self.state.documents

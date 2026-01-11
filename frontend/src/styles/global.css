@@ -1,0 +1,185 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;600&family=Sniglet:wght@400;800&display=swap');
+
+:root {
+  /* Clay Colors */
+  --clay-bg: linear-gradient(135deg, #f0e6d2 0%, #d8c292 100%);
+  /* Enhanced Gradient */
+  /* Beige landscape */
+  --clay-primary: #d27d54;
+  /* Terracotta */
+  --clay-secondary: #7daba3;
+  /* Muted Teal */
+  --clay-accent: #e8bd5e;
+  /* Mustard Yellow */
+  --clay-text: #5e4b35;
+  /* Dark Brown */
+  --clay-white: #f8f8f8;
+  --clay-red: #d95d5d;
+  --clay-green: #7cae7c;
+
+  /* Shadows for 3D Clay Effect */
+  --clay-shadow-out: 8px 8px 16px rgba(94, 75, 53, 0.3), -4px -4px 12px rgba(255, 255, 255, 0.6);
+  --clay-shadow-in: inset 6px 6px 12px rgba(94, 75, 53, 0.2), inset -6px -6px 12px rgba(255, 255, 255, 0.8);
+  --clay-shadow-deep: 12px 12px 24px rgba(94, 75, 53, 0.4);
+
+  /* Border Radius */
+  --radius-clay: 20px;
+  --radius-round: 50px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Fredoka', sans-serif;
+  background-color: var(--clay-bg);
+  color: var(--clay-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: 'Sniglet', cursive;
+  letter-spacing: 0.5px;
+}
+
+/* Clay Utilities */
+.clay-card {
+  background-color: var(--clay-white);
+  border-radius: var(--radius-clay);
+  padding: 2rem;
+  box-shadow: var(--clay-shadow-out);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.clay-card:hover {
+  transform: translateY(-2px);
+}
+
+.clay-btn {
+  background-color: var(--clay-primary);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  font-family: 'Sniglet', cursive;
+  font-size: 1.2rem;
+  border-radius: var(--radius-round);
+  box-shadow:
+    0 6px 0 #a05a38,
+    /* Extrusion */
+    0 12px 12px rgba(0, 0, 0, 0.2),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  position: relative;
+  top: 0;
+}
+
+.clay-btn:active {
+  transform: translateY(6px);
+  box-shadow:
+    0 0 0 #a05a38,
+    inset 4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.clay-btn.secondary {
+  background-color: var(--clay-secondary);
+  box-shadow: 0 6px 0 #588078, 0 12px 12px rgba(0, 0, 0, 0.2), inset 2px 2px 4px rgba(255, 255, 255, 0.4);
+}
+
+.clay-btn.secondary:active {
+  box-shadow: 0 0 0 #588078, inset 4px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.clay-input {
+  width: 100%;
+  padding: 1.2rem;
+  border: none;
+  border-radius: var(--radius-clay);
+  background-color: #fcfcfc;
+  box-shadow: var(--clay-shadow-in);
+  font-family: 'Fredoka', sans-serif;
+  font-size: 1.1rem;
+  color: var(--clay-text);
+  outline: none;
+  transition: box-shadow 0.2s;
+}
+
+.clay-input:focus {
+  box-shadow: inset 8px 8px 16px rgba(94, 75, 53, 0.15), inset -8px -8px 16px rgba(255, 255, 255, 0.9);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--clay-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--clay-primary);
+  border-radius: 10px;
+  border: 3px solid var(--clay-bg);
+}
+
+/* Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+.clay-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.clay-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Specific component styles that don't fit in inline styles easily */
+.pipeline-step {
+  opacity: 0.5;
+  transition: all 0.5s ease;
+  transform: scale(0.9);
+}
+
+.pipeline-step.active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.pipeline-step.completed {
+  opacity: 1;
+  transform: scale(1);
+  filter: grayscale(0%);
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}

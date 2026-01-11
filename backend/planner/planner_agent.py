@@ -31,12 +31,13 @@ class SearchStrategy(Enum):
 class PlannerContext:
     """
     Tracks planner execution state and history.
+    Budget constraints removed for unlimited research capability.
     """
 
-    def __init__(self, max_attempts: int = 3):
+    def __init__(self, max_attempts: int = 10):
         self.current_state: PlannerState = PlannerState.INIT
         self.attempt_count: int = 0
-        self.max_attempts: int = max_attempts
+        self.max_attempts: int = max_attempts  # Increased from 3 to 10
 
         self.confidence_history: List[str] = []
         self.decision_history: List[str] = []
@@ -53,10 +54,10 @@ class PlannerContext:
         self.no_progress_count: int = 0
         self.last_decision: Optional[str] = None
 
-        self.num_docs: int = 5
-        self.max_docs: int = 20
+        self.num_docs: int = 10  # Increased from 5 to 10
+        self.max_docs: int = 50  # Increased from 20 to 50
         self.search_count: int = 0
-        self.max_searches: int = 5
+        self.max_searches: int = 50  # Increased from 5 to 50 (effectively unlimited)
         self.budget_exhausted_reason: Optional[str] = None
 
 
@@ -242,12 +243,9 @@ class PlannerAgent:
                         )
                     return
 
-        # No cache hit -> proceed with normal research (consumes search budget)
+        # No cache hit -> proceed with normal research
         self.context.search_count += 1
-        if self.context.search_count > self.context.max_searches:
-            self.context.budget_exhausted_reason = "Search budget exhausted."
-            self.context.current_state = PlannerState.FAILED
-            return
+        # Budget check removed - allow unlimited searches
         
         query_used = self._modify_query(question)
         
@@ -430,7 +428,7 @@ class PlannerAgent:
 ):
         used = set(self.context.strategy_history)
 
-        # 1️⃣ Primary selection (intent-based)
+        #  Primary selection (intent-based)
         if "single source" in confidence_reason.lower():
             preferred = SearchStrategy.BROADEN_QUERY
 
@@ -443,18 +441,18 @@ class PlannerAgent:
         else:
             preferred = SearchStrategy.BROADEN_QUERY
 
-        # 2️⃣ If preferred already used → rotate
+        #  If preferred already used → rotate
         if preferred not in used:
             self.context.record_strategy(preferred)
             return
 
-        # 3️⃣ Fallback: first unused strategy in order
+        #  Fallback: first unused strategy in order
         for strategy in self.STRATEGY_ORDER:
             if strategy not in used:
                 self.context.record_strategy(strategy)
                 return
 
-        # 4️⃣ All strategies exhausted → mark failure
+        # All strategies exhausted → mark failure
         self.context.current_state = PlannerState.FAILED
 
     def _modify_query(self, question: str) -> str:
@@ -472,16 +470,13 @@ class PlannerAgent:
         return question
     
     def _should_stop(self) -> bool:
+        # Only stop on max attempts or no progress - no search budget limit
         if self.context.attempt_count >= self.context.max_attempts:
             self.context.budget_exhausted_reason = "Maximum retry attempts reached."
             return True
 
-        if self.context.no_progress_count >= 2:
+        if self.context.no_progress_count >= 3:  # Increased from 2 to 3
             self.context.budget_exhausted_reason = "No progress across multiple attempts."
-            return True
-        
-        if self.context.search_count >= self.context.max_searches:
-            self.context.budget_exhausted_reason = "Search budget exhausted."
             return True
 
         return False

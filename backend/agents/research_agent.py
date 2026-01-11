@@ -15,23 +15,39 @@ def normalize(text: str) -> Set[str]:
 
     stopwords = {
         "the", "is", "a", "an", "of", "to", "and", "in",
-        "for", "on", "with", "by", "as", "that", "this"
+        "for", "on", "with", "by", "as", "that", "this",
+        "what", "how", "why", "when", "where", "which",
+        "does", "do", "are", "was", "were", "will", "would",
+        "can", "could", "should", "must", "may", "might"
     }
 
     return {
         word
         for word in text.split()
-        if word not in stopwords and len(word) > 3
+        if word not in stopwords and len(word) > 2  # Allow shorter words like "api", "aws"
     }
 
 
 def is_relevant(claim: str, question: str) -> bool:
-    return len(normalize(claim) & normalize(question)) >= 2
+    """Check if a claim is relevant to the question.
+    
+    More permissive matching - requires at least 1 significant keyword overlap.
+    """
+    claim_words = normalize(claim)
+    question_words = normalize(question)
+    overlap = claim_words & question_words
+    
+    # At least 1 keyword match is enough 
+    is_match = len(overlap) >= 1
+    
+    if not is_match:
+        print(f"[Relevance] SKIP claim (no overlap): claim_words={list(claim_words)[:5]}... question_words={list(question_words)}")
+    
+    return is_match
 
 
 class ResearchAgent:
     """
-    TEA-compliant Research Agent.
     Orchestrates environment → extraction → verification → confidence → meta-control → synthesis
     """
 
@@ -54,24 +70,29 @@ class ResearchAgent:
         Single-attempt research pipeline (Planner Agent will add retries later)
         """
 
-        
+        print(f"[ResearchAgent] Starting research for: {question}")
 
-        # 1️⃣ Observe the world
+        #  Observe the world
         documents = self.web_env.run(question,num_docs=num_docs)
+        print(f"[ResearchAgent] Retrieved {len(documents)} documents")
 
-        # 2️⃣ Extract + filter claims
+        #  Extract + filter claims
         extracted_claims: List[ExtractedClaim] = []
 
         for doc in documents:
+            print(f"[ResearchAgent] Extracting claims from: {doc.url}")
             claims = self.claim_extractor.extract_claims(
                 text=doc.text,
                 source_url=doc.url
             )
+            print(f"[ResearchAgent] Found {len(claims)} raw claims from {doc.url}")
             for claim in claims:
                 if is_relevant(claim.claim, question):
                     extracted_claims.append(claim)
+            print(f"[ResearchAgent] {len(extracted_claims)} total relevant claims so far")
 
         if not extracted_claims:
+            print(f"[ResearchAgent] No relevant claims extracted, returning low confidence")
             return {
                 "answer": "Insufficient verified information is available to answer this question.",
                 "confidence_level": "LOW",
@@ -80,13 +101,17 @@ class ResearchAgent:
                 "notes": "Further investigation is recommended."
             }
 
-        # 3️⃣ Verify claims
+        print(f"[ResearchAgent] Total extracted claims: {len(extracted_claims)}")
+
+        #  Verify claims
         verified_claims = self.verifier.verify(extracted_claims)
+        print(f"[ResearchAgent] Verified {len(verified_claims)} claims")
 
-        # 4️⃣ Score confidence
+        #  Score confidence
         confidence = self.confidence_scorer.score(verified_claims)
+        print(f"[ResearchAgent] Confidence: {confidence}")
 
-       # 5️⃣ Synthesize answer (NO decisions)
+       #  Synthesize answer (NO decisions)
         return self.synthesizer.synthesize(
             question=question,
             verified_claims=verified_claims,
